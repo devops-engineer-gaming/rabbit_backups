@@ -1,0 +1,79 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: job-rabbitconfigbackuper
+  labels:
+    helm.sh/chart: job-rabbitconfigbackuper-0.1.0
+    app.kubernetes.io/name: job-rabbitconfigbackuper
+    app.kubernetes.io/instance: release-name
+    app: job-rabbitconfigbackuper
+    project: habr
+    type: job
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  schedule: "@daily"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  startingDeadlineSeconds: 180
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            helm.sh/chart: job-rabbitconfigbackuper-0.1.0
+            app.kubernetes.io/name: job-rabbitconfigbackuper
+            app.kubernetes.io/instance: release-name
+            app: job-rabbitconfigbackuper
+            project: habr
+            type: job
+            app.kubernetes.io/version: "latest"
+            app.kubernetes.io/managed-by: Helm
+        spec:
+          serviceAccountName: common-sa
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 3000
+            fsGroup: 2000
+          restartPolicy: OnFailure
+          containers:
+          - name: job-rabbitconfigbackuper
+            image: "google/cloud-sdk:alpine"
+            command:
+              - /bin/sh
+            args:
+              - -c
+              - set -e; 
+                curl http://$Rabbit__Host:$Rabbit__Port$Rabbit__JSON__Query$(echo -n $RabbitMQ__Creds | base64 -w 0) > /tmp/$Environment.json; 
+                curl http://$Rabbit__External__Host:$Rabbit__Port$Rabbit__JSON__Query__External$(echo -n $RabbitMQ__Creds__External | base64 -w 0) > /tmp/$Environment\_external.json;
+                yes | gcloud auth login --cred-file=$GOOGLE_APPLICATION_CREDENTIALS; gsutil cp /tmp/$Environment.json;
+                gs://configs-backup/rabbitmq/$Environment.json; gsutil cp /tmp/$Environment\_external.json;
+                gs://configs-backup/rabbitmq/$Environment\_external.json;
+            env:
+              - name: "Environment"
+                value: "stage"
+              - name: "GOOGLE_APPLICATION_CREDENTIALS"
+                value: "/var/secrets/google/key.json"
+              - name: "Rabbit__External__Host"
+                value: "<your_external_rabbit_host>"
+              - name: "Rabbit__Host"
+                value: "<your_internal_rabbit_host>"
+              - name: "Rabbit__JSON__Query"
+                value: "/api/definitions?download=rabbit_<your_internal_rabbit_host>.json&auth="
+              - name: "Rabbit__JSON__Query__External"
+                value: "/api/definitions?download=rabbit_<your_external_rabbit_host>.json&auth="
+              - name: "Rabbit__Port"
+                value: "15672"
+            envFrom:
+            - secretRef:
+                name: job-rabbitconfigbackuper-rabbit-secret
+            volumeMounts:
+            - mountPath: /var/secrets/google
+              name: google-cloud-key
+          volumes:
+          - name: google-cloud-key
+            secret:
+              secretName: configbackuper-gcp-sa
