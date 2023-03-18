@@ -50,8 +50,7 @@ spec:
                 curl http://$Rabbit__Host:$Rabbit__Port$Rabbit__JSON__Query$(echo -n $RabbitMQ__Creds | base64 -w 0) > /tmp/$Environment.json; 
                 curl http://$Rabbit__External__Host:$Rabbit__Port$Rabbit__JSON__Query__External$(echo -n $RabbitMQ__Creds__External | base64 -w 0) > /tmp/$Environment\_external.json;
                 yes | gcloud auth login --cred-file=$GOOGLE_APPLICATION_CREDENTIALS; 
-                gsutil cp /tmp/$Environment.json;
-                gs://configs-backup/rabbitmq/$Environment.json; 
+                gsutil cp /tmp/$Environment.json gs://configs-backup/rabbitmq/$Environment.json; 
                 gsutil cp /tmp/$Environment\_external.json gs://configs-backup/rabbitmq/$Environment\_external.json;
             env:
               - name: "Environment"
