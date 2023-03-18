@@ -28,4 +28,4 @@ RabbitMQ Definitions backups from K8s CronJob
 ![image](https://user-images.githubusercontent.com/87787051/226133515-422f7c9f-5c01-459e-a4e6-0852b192366b.png)
 5. Put this in k8s secret ``configbackuper-gcp-sa`` via Lens for example
 6. Create secret ``job-rabbitconfigbackuper-rabbit-secret`` this login:pass pair of some admin user of backuping RabbitMQ host
-7. Deploy job ``kubectl apply -f k8s/config-backuper.yaml -n <your_namespace>``
+7. Deploy job ``kubectl apply -f ../k8s/config-backuper.yaml -n <your_namespace>``
