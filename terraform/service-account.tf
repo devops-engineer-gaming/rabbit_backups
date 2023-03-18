@@ -1,6 +1,6 @@
 resource "google_service_account" "configs_backup_sa" {
   account_id   = "configs-backup-sa"
-  display_name = "Created by terraform support/x001/sb2-configs-backup for control in configs_backup bucket"
+  display_name = "Created by terraform configs-backup for control in configs_backup bucket"
   project = "${var.project}"
 }
 
